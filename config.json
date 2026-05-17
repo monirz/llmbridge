@@ -1,0 +1,49 @@
+{
+  "providers": {
+    "ollama": {
+      "keys": [
+        {
+          "name": "ollama-local",
+          "weight": 1,
+          "models": ["*"],
+          "ollama_key_config": {
+            "url": "http://ollama:11434"
+          }
+        }
+      ],
+      "network_config": {
+        "default_request_timeout_in_seconds": 120
+      }
+    },
+    "gemini": {
+      "keys": [
+        {
+          "name": "gemini-key",
+          "value": "env.GEMINI_API_KEY",
+          "weight": 1,
+          "models": ["*"]
+        }
+      ]
+    },
+    "anthropic": {
+      "keys": [
+        {
+          "name": "claude-key",
+          "value": "env.ANTHROPIC_API_KEY",
+          "weight": 1,
+          "models": ["*"]
+        }
+      ]
+    },
+    "openai": {
+      "keys": [
+        {
+          "name": "openai-key",
+          "value": "env.OPENAI_API_KEY",
+          "weight": 1,
+          "models": ["*"]
+        }
+      ]
+    }
+  }
+}

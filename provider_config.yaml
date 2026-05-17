@@ -1,0 +1,28 @@
+bifrost_url: "http://localhost:8080/v1/chat/completions"
+default_model: "ollama/qwen2.5:3b"
+
+providers:
+  - id: ollama
+    name: Ollama
+    model: "ollama/qwen2.5:3b"
+    badge: "Self-hosted"
+    icon: "🦙"
+    color: "#e05d44"
+  - id: openai
+    name: OpenAI
+    model: "openai/gpt-4o-mini"
+    badge: "Cloud"
+    icon: "⚡"
+    color: "#74aa9c"
+  - id: claude
+    name: Claude
+    model: "anthropic/claude-haiku-3-5"
+    badge: "Cloud"
+    icon: "✦"
+    color: "#c5956c"
+  - id: gemini
+    name: Gemini
+    model: "gemini/gemini-2.5-flash"
+    badge: "Cloud"
+    icon: "✦"
+    color: "#4285f4"

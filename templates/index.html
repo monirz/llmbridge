@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LLMBridge</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117;
+  color: #c9d1d9;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  padding: 13px 24px;
+  border-bottom: 1px solid #21262d;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.header h1 { font-size: 0.95rem; font-weight: 600; color: #f0f6fc; }
+.header p  { font-size: 0.7rem; color: #484f58; margin-top: 2px; }
+
+/* ── Provider bar ── */
+.provider-bar {
+  padding: 10px 24px;
+  border-bottom: 1px solid #21262d;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.provider-bar::-webkit-scrollbar { display: none; }
+.provider-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #484f58;
+  white-space: nowrap;
+}
+.provider-cards { display: flex; gap: 8px; }
+.pcard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #21262d;
+  background: #161b22;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+  white-space: nowrap;
+}
+.pcard:hover { border-color: #388bfd; }
+.pcard.sel   { border-color: #388bfd; background: #1c2d42; }
+.pcard-icon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.pcard-name  { font-size: 0.8rem; font-weight: 600; color: #f0f6fc; }
+.pcard-model { font-size: 0.67rem; color: #484f58; margin-top: 1px; }
+.pcard.sel .pcard-model { color: #79c0ff; }
+.pcard-badge {
+  font-size: 0.58rem; padding: 2px 5px;
+  border-radius: 4px; background: #21262d; color: #484f58; font-weight: 500;
+}
+.pcard.sel .pcard-badge { background: #1f4068; color: #79c0ff; }
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: 1fr 296px; flex: 1; overflow: hidden; }
+
+/* ── Chat panel ── */
+.chat-panel { display: flex; flex-direction: column; border-right: 1px solid #21262d; overflow: hidden; }
+.messages {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: #21262d; border-radius: 2px; }
+
+.empty-state {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px; color: #30363d;
+}
+.empty-icon { font-size: 2rem; }
+.empty-text { font-size: 0.85rem; }
+
+.msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  word-wrap: break-word;
+}
+.msg.user      { align-self: flex-end;  background: #1c2d42; border: 1px solid #1f4068; color: #cae8ff; border-bottom-right-radius: 3px; }
+.msg.assistant { align-self: flex-start; background: #161b22; border: 1px solid #21262d; color: #c9d1d9; border-bottom-left-radius: 3px; }
+.msg-meta { margin-top: 6px; font-size: 0.68rem; color: #484f58; }
+
+.input-area {
+  padding: 13px 24px; border-top: 1px solid #21262d;
+  display: flex; gap: 10px; flex-shrink: 0;
+}
+.input-area textarea {
+  flex: 1; background: #161b22; border: 1px solid #21262d;
+  border-radius: 8px; padding: 10px 14px; color: #c9d1d9;
+  font-size: 0.875rem; resize: none; height: 44px;
+  font-family: inherit; transition: border-color 0.15s;
+}
+.input-area textarea:focus { outline: none; border-color: #388bfd; }
+.input-area textarea::placeholder { color: #30363d; }
+.send-btn {
+  background: #238636; color: #fff; border: none;
+  border-radius: 8px; padding: 0 20px; cursor: pointer;
+  font-size: 0.875rem; font-weight: 500; transition: background 0.15s;
+}
+.send-btn:hover    { background: #2ea043; }
+.send-btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+/* ── Info panel ── */
+.info-panel { display: flex; flex-direction: column; overflow-y: auto; }
+.info-panel::-webkit-scrollbar { width: 4px; }
+.info-panel::-webkit-scrollbar-thumb { background: #21262d; border-radius: 2px; }
+
+.section { padding: 16px 18px; border-bottom: 1px solid #21262d; }
+.section-title {
+  font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.09em;
+  color: #484f58; margin-bottom: 14px;
+}
+
+/* ── Wallet ── */
+.wallet-display { text-align: center; padding: 2px 0; }
+.wallet-amount {
+  font-size: 2.1rem; font-weight: 700;
+  color: #3fb950; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; transition: color 0.3s;
+}
+.wallet-amount.medium { color: #d29922; }
+.wallet-amount.low    { color: #f85149; }
+.wallet-currency { font-size: 0.7rem; color: #484f58; margin-top: 3px; }
+.reset-btn {
+  margin-top: 10px; background: none; border: 1px solid #21262d;
+  color: #484f58; border-radius: 6px; padding: 5px 12px;
+  cursor: pointer; font-size: 0.7rem; transition: all 0.15s;
+  display: block; width: 100%;
+}
+.reset-btn:hover { border-color: #484f58; color: #c9d1d9; }
+
+.topup-label { font-size: 0.65rem; color: #484f58; margin-top: 12px; margin-bottom: 6px; }
+.topup-btns  { display: flex; gap: 6px; }
+.topup-btn {
+  flex: 1; background: none; border: 1px solid #238636;
+  color: #3fb950; border-radius: 6px; padding: 5px 0;
+  cursor: pointer; font-size: 0.72rem; font-weight: 600;
+  transition: all 0.15s;
+}
+.topup-btn:hover    { background: #1a4731; }
+.topup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Flow steps ── */
+.flow-steps { display: flex; flex-direction: column; }
+.flow-row   { display: flex; align-items: flex-start; gap: 10px; }
+.step-col   { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+
+.step-circle {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #161b22; border: 1.5px solid #21262d;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; color: #484f58;
+  transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s;
+  flex-shrink: 0;
+}
+.step-circle.active {
+  background: #1c2d42; border-color: #388bfd; color: #79c0ff;
+  box-shadow: 0 0 0 3px rgba(56,139,253,0.12);
+}
+.step-circle.done { background: #1a4731; border-color: #3fb950; color: #3fb950; }
+
+.step-line {
+  width: 1.5px; flex: 1; min-height: 10px;
+  background: #21262d; margin: 2px 0; transition: background 0.25s;
+}
+.step-line.active { background: #388bfd; }
+.step-line.done   { background: #3fb950; }
+
+.step-body { padding: 4px 0 8px; }
+.step-text {
+  font-size: 0.78rem; color: #484f58; line-height: 1.4; transition: color 0.25s;
+}
+.step-text.active { color: #f0f6fc; }
+.step-text.done   { color: #56d364; }
+
+/* ── Stats ── */
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid #161b22; font-size: 0.78rem;
+}
+.stat-row:last-child { border: none; }
+.stat-label { color: #484f58; }
+.stat-val   { color: #c9d1d9; font-variant-numeric: tabular-nums; }
+.stat-val.cost { color: #f85149; }
+.no-stats { font-size: 0.78rem; color: #30363d; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>LLMBridge</h1>
+    <p>Local mobile money (BDT) &rarr; AI access &mdash; no international card needed</p>
+  </div>
+</div>
+
+<div class="provider-bar">
+  <span class="provider-label">AI Provider</span>
+  <div class="provider-cards" id="provider-cards"></div>
+</div>
+
+<div class="layout">
+  <div class="chat-panel">
+    <div class="messages" id="messages">
+      <div class="empty-state">
+        <div class="empty-icon">&#128172;</div>
+        <div class="empty-text">Send a message to get started</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea id="input" placeholder="Type a message..." onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <div class="section">
+      <div class="section-title">BDT Wallet (Simulated)</div>
+      <div class="wallet-display">
+        <div class="wallet-amount" id="balance">100.0000</div>
+        <div class="wallet-currency">BDT remaining</div>
+        <div class="topup-label">Top up via bKash (mock)</div>
+        <div class="topup-btns">
+          <button class="topup-btn" onclick="topup(50)">৳50</button>
+          <button class="topup-btn" onclick="topup(100)">৳100</button>
+          <button class="topup-btn" onclick="topup(200)">৳200</button>
+        </div>
+        <button class="reset-btn" onclick="resetWallet()">Reset wallet</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Request Flow</div>
+      <div class="flow-steps" id="flow"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Last Request</div>
+      <div id="stats"><div class="no-stats">No requests yet</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var PROVIDERS = [];
+
+var STEPS = [
+  {id:1, text:'User sends API request',             dynamic:false},
+  {id:2, text:'Your App proxies to Bifrost',        dynamic:false},
+  {id:3, text:'Bifrost calls ',                     dynamic:true},
+  {id:4, text:'Response + token count returned',    dynamic:false},
+  {id:5, text:'Your App sends usage event to Lago', dynamic:false},
+  {id:6, text:"Lago debits user's BDT wallet",      dynamic:false}
+];
+
+var selectedProvider = PROVIDERS[0];
+
+function buildProviders() {
+  var container = document.getElementById('provider-cards');
+  container.innerHTML = '';
+  for (var i = 0; i < PROVIDERS.length; i++) {
+    (function(p) {
+      var card = document.createElement('div');
+      card.className = 'pcard' + (p.id === selectedProvider.id ? ' sel' : '');
+
+      var icon = document.createElement('div');
+      icon.className = 'pcard-icon';
+      icon.style.background = p.color + '22';
+      icon.style.color = p.color;
+      icon.innerHTML = p.icon;
+      card.appendChild(icon);
+
+      var col = document.createElement('div');
+
+      var name = document.createElement('div');
+      name.className = 'pcard-name';
+      name.textContent = p.name;
+      col.appendChild(name);
+
+      var mdl = document.createElement('div');
+      mdl.className = 'pcard-model';
+      mdl.textContent = p.model;
+      col.appendChild(mdl);
+
+      card.appendChild(col);
+
+      var badge = document.createElement('span');
+      badge.className = 'pcard-badge';
+      badge.textContent = p.badge;
+      card.appendChild(badge);
+
+      card.onclick = function() {
+        selectedProvider = p;
+        buildProviders();
+        buildFlow();
+      };
+      container.appendChild(card);
+    })(PROVIDERS[i]);
+  }
+}
+
+function buildFlow() {
+  var container = document.getElementById('flow');
+  container.innerHTML = '';
+  for (var i = 0; i < STEPS.length; i++) {
+    var s = STEPS[i];
+    var last = (i === STEPS.length - 1);
+    var text = s.dynamic ? s.text + selectedProvider.model : s.text;
+
+    var row = document.createElement('div');
+    row.className = 'flow-row';
+
+    var col = document.createElement('div');
+    col.className = 'step-col';
+
+    var circle = document.createElement('div');
+    circle.className = 'step-circle';
+    circle.id = 'sc' + s.id;
+    circle.textContent = s.id;
+    col.appendChild(circle);
+
+    if (!last) {
+      var line = document.createElement('div');
+      line.className = 'step-line';
+      line.id = 'ln' + s.id;
+      col.appendChild(line);
+    }
+
+    var body = document.createElement('div');
+    body.className = 'step-body';
+
+    var stepText = document.createElement('div');
+    stepText.className = 'step-text';
+    stepText.id = 'st' + s.id;
+    stepText.textContent = text;
+    body.appendChild(stepText);
+
+    row.appendChild(col);
+    row.appendChild(body);
+    container.appendChild(row);
+  }
+}
+
+function setStep(n, state) {
+  var c = document.getElementById('sc' + n);
+  var t = document.getElementById('st' + n);
+  var l = document.getElementById('ln' + n);
+  if (!c) return;
+  c.className = 'step-circle' + (state ? ' ' + state : '');
+  c.textContent = state === 'done' ? '✓' : n;
+  t.className   = 'step-text'   + (state ? ' ' + state : '');
+  if (l) l.className = 'step-line' + (state ? ' ' + state : '');
+}
+
+function resetSteps() {
+  for (var i = 1; i <= 6; i++) setStep(i, '');
+}
+
+function delay(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
+
+async function sendMessage() {
+  var input = document.getElementById('input');
+  var msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  document.getElementById('send-btn').disabled = true;
+
+  var empty = document.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  appendBubble('user', msg);
+
+  setStep(1, 'active');
+  await delay(210);
+  setStep(2, 'active');
+  await delay(210);
+  setStep(3, 'active');
+
+  var placeholder = appendBubble('assistant', '...');
+
+  try {
+    var res = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg, model: selectedProvider.model})
+    });
+    if (!res.ok) {
+      throw new Error((await res.text()) || res.statusText);
+    }
+    var data = await res.json();
+
+    setStep(4, 'active'); await delay(160);
+    setStep(5, 'active'); await delay(160);
+    setStep(6, 'active'); await delay(160);
+
+    for (var i = 1; i <= 6; i++) { setStep(i, 'done'); await delay(55); }
+
+    placeholder.querySelector('.msg-body').textContent = data.reply;
+
+    var meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = data.input_tokens + ' in + ' + data.output_tokens + ' out tokens  ·  ' + data.cost_bdt.toFixed(6) + ' BDT';
+    placeholder.appendChild(meta);
+
+    updateBalance(data.balance);
+    updateStats(data);
+  } catch(e) {
+    placeholder.querySelector('.msg-body').textContent = 'Error: ' + e.message;
+    resetSteps();
+  }
+
+  document.getElementById('messages').scrollTop = 999999;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function appendBubble(role, text) {
+  var msgs = document.getElementById('messages');
+  var div  = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  var body = document.createElement('div');
+  body.className = 'msg-body';
+  body.textContent = text;
+  div.appendChild(body);
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function updateBalance(b) {
+  var el = document.getElementById('balance');
+  el.textContent = b.toFixed(4);
+  el.className = 'wallet-amount' + (b < 10 ? ' low' : b < 50 ? ' medium' : '');
+}
+
+function updateStats(data) {
+  var total = data.input_tokens + data.output_tokens;
+  document.getElementById('stats').innerHTML =
+    '<div class="stat-row"><span class="stat-label">Input tokens</span><span class="stat-val">'  + data.input_tokens  + '</span></div>' +
+    '<div class="stat-row"><span class="stat-label">Output tokens</span><span class="stat-val">' + data.output_tokens + '</span></div>' +
+    '<div class="stat-row"><span class="stat-label">Total tokens</span><span class="stat-val">'  + total              + '</span></div>' +
+    '<div class="stat-row"><span class="stat-label">Cost</span><span class="stat-val cost">'     + data.cost_bdt.toFixed(6) + ' BDT</span></div>' +
+    '<div class="stat-row"><span class="stat-label">Provider</span><span class="stat-val" style="font-size:0.7rem">' + selectedProvider.name + '</span></div>';
+}
+
+async function topup(amount) {
+  var btns = document.querySelectorAll('.topup-btn');
+  btns.forEach(function(b){ b.disabled = true; });
+  try {
+    var res = await fetch('/topup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({amount: amount})
+    });
+    var data = await res.json();
+    updateBalance(data.balance);
+  } finally {
+    btns.forEach(function(b){ b.disabled = false; });
+  }
+}
+
+async function resetWallet() {
+  await fetch('/reset', {method: 'POST'});
+  document.getElementById('balance').textContent = '100.0000';
+  document.getElementById('balance').className = 'wallet-amount';
+  document.getElementById('messages').innerHTML =
+    '<div class="empty-state"><div class="empty-icon">&#128172;</div><div class="empty-text">Send a message to get started</div></div>';
+  document.getElementById('stats').innerHTML = '<div class="no-stats">No requests yet</div>';
+  resetSteps();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+fetch('/config').then(function(r){ return r.json(); }).then(function(cfg) {
+  PROVIDERS = cfg.providers || [];
+  var def = cfg.default_model || '';
+  selectedProvider = PROVIDERS.find(function(p){ return p.model === def; }) || PROVIDERS[0];
+  buildProviders();
+  buildFlow();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# build / binary
+poc
+/llmbridge
+
+# bifrost runtime
+bifrost/*.db
+bifrost/logs/
+
+# secrets
+.env
+*.env.*
+
+# articles & drafts
+*.draft
+article*.md
+bangla*.md
+title-options.md
+*_draft*.md
+
+# claude / agent
+CLAUDE.md
+AGENT.md
+.claude/
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
