@@ -1,3 +1,5 @@
+![LLMBridge](assets/banner.png)
+
 # LLMBridge
 
 LLMBridge is a concept of a single platform where users can access and switch between any AI provider — cloud or self-hosted — without changing their application code. Just update the config and run one command.
@@ -10,7 +12,75 @@ Token usage is metered via [Lago](https://github.com/getlago/lago) — every req
 
 ---
 
+## How it works
 
+A chat request flows through the full stack in sequence:
+
+```
+User (browser)
+    │
+    ▼
+LLMBridge  :9000        ← Go app — chat UI, token cost, wallet debit
+    │
+    ▼
+Bifrost    :8080        ← AI gateway — routes to the configured provider
+    │
+    ▼
+AI Provider             ← Gemini / Claude / OpenAI / Ollama (local)
+    │
+    ▼ (response + token count)
+LLMBridge
+    │
+    ├──▶ Wallet debit (in-memory, shown in UI)
+    │
+    └──▶ Lago API :3000  ← usage event fired async (tokens_used metric)
+```
+
+All services run inside the same Docker network — nothing is exposed beyond what's needed.
+
+---
+
+## Services
+
+| Service | Address | Description |
+|---|---|---|
+| LLMBridge | http://localhost:9000 | Chat UI and API |
+| Bifrost | http://localhost:8080 | AI gateway dashboard |
+| Lago dashboard | http://localhost:8081 | Billing UI — login: `admin@llmbridge.local` / `password` |
+| Lago API | http://localhost:3000 | Billing REST API |
+| Ollama | http://localhost:11434 | Local model runtime (only when `MODEL=ollama/*`) |
+
+---
+
+## Lago billing
+
+Lago runs as part of the same `docker compose` stack. On first boot it auto-creates an org, a billable metric (`tokens_used`), and a pre-set API key — no manual setup needed.
+
+After every chat request, LLMBridge fires a usage event to Lago:
+
+```json
+{
+  "code": "tokens_used",
+  "external_customer_id": "demo-user",
+  "properties": {
+    "input_tokens": 5,
+    "output_tokens": 35,
+    "total_tokens": 40,
+    "model": "gemini/gemini-2.5-flash"
+  }
+}
+```
+
+To verify events are flowing:
+
+```bash
+curl http://localhost:3000/api/v1/events \
+  -H "Authorization: Bearer llmbridge-lago-dev-key"
+```
+
+To explore usage in the dashboard, open **http://localhost:8081** and go to **Events**.
+
+---
 
 ## Run
 
@@ -35,8 +105,6 @@ Once everything is up:
 - **http://localhost:3000** — Lago API
 
 By default it runs with the self-hosted `qwen2.5:3b` model via Ollama — no API key needed. Bifrost, Ollama, Lago, and LLMBridge are all managed under the same `docker compose`.
-
-> Lago auto-creates an org on first boot. The API key is pre-set to `llmbridge-lago-dev-key` — no manual step needed.
 
 ---
 

@@ -148,7 +148,7 @@ services:
   lago-front:
     image: getlago/front:v1.46.0
     ports:
-      - "8081:8080"
+      - "8081:80"
     environment:
       API_URL: http://localhost:3000
       APP_ENV: production
