@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="blue-bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4f6ef7"/>
+      <stop offset="100%" stop-color="#3b55e0"/>
+    </linearGradient>
+    <linearGradient id="green-bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3fb950"/>
+      <stop offset="100%" stop-color="#2ea043"/>
+    </linearGradient>
+    <filter id="card-shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#ffffff" stroke-opacity="0.03" stroke-width="1">
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/>
+    <line x1="200" y1="0" x2="200" y2="600"/>
+    <line x1="400" y1="0" x2="400" y2="600"/>
+    <line x1="600" y1="0" x2="600" y2="600"/>
+    <line x1="800" y1="0" x2="800" y2="600"/>
+    <line x1="1000" y1="0" x2="1000" y2="600"/>
+  </g>
+
+  <!-- Title -->
+  <text x="60" y="92" font-family="'SF Mono', 'Fira Code', monospace" font-size="64" font-weight="700" fill="#ffffff" letter-spacing="-2">LLMBridge</text>
+
+  <!-- Badges -->
+  <!-- v0.1.0 -->
+  <rect x="390" y="55" width="90" height="30" rx="15" fill="#4f6ef7"/>
+  <text x="435" y="75" font-family="'SF Mono', monospace" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">v0.1.0</text>
+
+  <!-- Go 1.22 -->
+  <rect x="492" y="55" width="90" height="30" rx="15" fill="#3fb950"/>
+  <text x="537" y="75" font-family="'SF Mono', monospace" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">Go 1.22</text>
+
+  <!-- OSS -->
+  <rect x="594" y="55" width="70" height="30" rx="15" fill="#8957e5"/>
+  <text x="629" y="75" font-family="'SF Mono', monospace" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">OSS</text>
+
+  <!-- Subtitle -->
+  <text x="60" y="128" font-family="'SF Mono', 'Fira Code', monospace" font-size="16" fill="#8b949e" letter-spacing="0">AI gateway · swap providers in one config · BDT mobile-money billing</text>
+
+  <!-- Divider -->
+  <line x1="60" y1="148" x2="1140" y2="148" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Flow boxes -->
+  <!-- Box 1: config.yaml -->
+  <rect x="60" y="168" width="240" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1" filter="url(#card-shadow)"/>
+  <text x="82" y="200" font-family="'SF Mono', monospace" font-size="13" fill="#3fb950">$ config.yaml</text>
+  <text x="82" y="222" font-family="'SF Mono', monospace" font-size="13" fill="#4f6ef7">provider: gemini</text>
+  <text x="82" y="244" font-family="'SF Mono', monospace" font-size="13" fill="#6e7681"># change → done</text>
+  <rect x="82" y="258" width="80" height="4" rx="2" fill="url(#blue-bar)"/>
+
+  <!-- Arrow 1 -->
+  <text x="318" y="230" font-family="sans-serif" font-size="20" fill="#6e7681" text-anchor="middle">→</text>
+
+  <!-- Box 2: Bifrost -->
+  <rect x="340" y="168" width="180" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1" filter="url(#card-shadow)"/>
+  <text x="430" y="215" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">Bifrost</text>
+  <text x="430" y="237" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">gateway</text>
+  <rect x="362" y="258" width="80" height="4" rx="2" fill="url(#blue-bar)"/>
+
+  <!-- Arrow 2 -->
+  <text x="538" y="230" font-family="sans-serif" font-size="20" fill="#6e7681" text-anchor="middle">→</text>
+
+  <!-- Box 3: Lago -->
+  <rect x="558" y="168" width="180" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1" filter="url(#card-shadow)"/>
+  <text x="648" y="207" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">Lago OSS</text>
+  <text x="648" y="229" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">metering</text>
+  <text x="648" y="251" font-family="'SF Mono', monospace" font-size="14" fill="#3fb950" text-anchor="middle">৳ BDT</text>
+  <rect x="580" y="258" width="80" height="4" rx="2" fill="url(#green-bar)"/>
+
+  <!-- Arrow 3 -->
+  <text x="756" y="230" font-family="sans-serif" font-size="20" fill="#6e7681" text-anchor="middle">→</text>
+
+  <!-- Box 4: mobile wallet -->
+  <rect x="776" y="168" width="180" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1" filter="url(#card-shadow)"/>
+  <text x="866" y="215" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">mobile wallet</text>
+  <text x="866" y="237" font-family="'SF Mono', monospace" font-size="14" fill="#8b949e" text-anchor="middle">topup</text>
+  <rect x="798" y="258" width="80" height="4" rx="2" fill="url(#green-bar)"/>
+
+  <!-- Divider -->
+  <line x1="60" y1="298" x2="1140" y2="298" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Feature cards -->
+  <!-- Card 1: Providers -->
+  <rect x="60" y="318" width="255" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="82" y="348" font-family="'SF Mono', monospace" font-size="11" fill="#6e7681" letter-spacing="1">Providers</text>
+  <text x="82" y="376" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">OpenAI · Claude</text>
+  <text x="82" y="400" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">Gemini · Ollama</text>
+
+  <!-- Card 2: Billing -->
+  <rect x="335" y="318" width="255" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="357" y="348" font-family="'SF Mono', monospace" font-size="11" fill="#6e7681" letter-spacing="1">Billing</text>
+  <text x="357" y="376" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">per-token metering</text>
+  <text x="357" y="400" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">prepaid wallet</text>
+
+  <!-- Card 3: Local payments -->
+  <rect x="610" y="318" width="255" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="632" y="348" font-family="'SF Mono', monospace" font-size="11" fill="#6e7681" letter-spacing="1">Local payments</text>
+  <text x="632" y="376" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">no intl. card needed</text>
+  <text x="632" y="400" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">BDT native</text>
+
+  <!-- Card 4: Deploy -->
+  <rect x="885" y="318" width="255" height="110" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="907" y="348" font-family="'SF Mono', monospace" font-size="11" fill="#6e7681" letter-spacing="1">Deploy</text>
+  <text x="907" y="376" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">Docker · K8s</text>
+  <text x="907" y="400" font-family="'SF Mono', monospace" font-size="15" fill="#c9d1d9">self-hosted</text>
+
+  <!-- GitHub watermark -->
+  <text x="1140" y="580" font-family="'SF Mono', monospace" font-size="12" fill="#6e7681" text-anchor="end">github.com/monirz/llmbridge</text>
+</svg>

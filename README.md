@@ -1,4 +1,4 @@
-![LLMBridge](assets/banner.png)
+![LLMBridge](assets/banner.svg)
 
 # LLMBridge
 
