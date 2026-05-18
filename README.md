@@ -25,7 +25,12 @@ Then start all services:
 docker compose up --build
 ```
 
-Once everything is up, open **http://localhost:9000** in your browser.
+Once everything is up:
+
+- **http://localhost:9000** — LLMBridge chat UI
+- **http://localhost:8080** — Bifrost gateway dashboard
+
+By default it runs with the self-hosted `qwen2.5:3b` model via Ollama — no API key needed. Bifrost, Ollama, and LLMBridge are all managed under the same `docker compose`.
 
 ---
 
