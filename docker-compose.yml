@@ -5,12 +5,10 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
+    environment:
+      - MODEL=${MODEL:-}
+    entrypoint: ["/bin/sh", "-c", "case \"$MODEL\" in ollama/*|\"\") /bin/ollama serve ;; *) exit 0 ;; esac"]
+    restart: on-failure
 
   ollama-init:
     image: ollama/ollama
@@ -18,10 +16,10 @@ services:
       - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=http://ollama:11434
+      - MODEL=${MODEL:-}
     depends_on:
-      ollama:
-        condition: service_healthy
-    entrypoint: ["ollama", "pull", "qwen2.5:3b"]
+      - ollama
+    entrypoint: ["/bin/sh", "-c", "case \"$MODEL\" in ollama/*|\"\") until ollama list 2>/dev/null; do sleep 2; done && ollama pull ${MODEL:-qwen2.5:3b} ;; *) exit 0 ;; esac"]
     restart: "no"
 
   bifrost:
@@ -36,9 +34,6 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    depends_on:
-      ollama:
-        condition: service_healthy
     restart: unless-stopped
 
   llmbridge:
