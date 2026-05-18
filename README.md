@@ -1,3 +1,5 @@
+![LLMBridge](assets/banner.png)
+
 # LLMBridge
 
 LLMBridge is a concept of a single platform where users can access and switch between any AI provider — cloud or self-hosted — without changing their application code. Just update the config and run one command.
