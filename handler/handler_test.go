@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"llmbridge/config"
+	"llmbridge/lago"
 	"llmbridge/wallet"
 )
 
@@ -20,7 +21,8 @@ func newTestHandler(bifrostURL string) *Handler {
 		},
 	}
 	w := wallet.New(100.0)
-	return New(cfg, w, 100.0, []byte("<html>test</html>"))
+	l := lago.New("http://localhost:3000", "") // disabled in tests
+	return New(cfg, w, l, 100.0, []byte("<html>test</html>"))
 }
 
 func mockBifrost(reply string, inputTokens, outputTokens int) *httptest.Server {

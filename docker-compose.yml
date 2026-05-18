@@ -1,4 +1,5 @@
 services:
+  # ── Ollama (local model) ────────────────────────────────────────────────────
   ollama:
     image: ollama/ollama
     ports:
@@ -22,6 +23,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "case \"$MODEL\" in ollama/*|\"\") until ollama list 2>/dev/null; do sleep 2; done && ollama pull ${MODEL:-qwen2.5:3b} ;; *) exit 0 ;; esac"]
     restart: "no"
 
+  # ── Bifrost AI gateway ──────────────────────────────────────────────────────
   bifrost:
     image: maximhq/bifrost:latest
     ports:
@@ -36,6 +38,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: unless-stopped
 
+  # ── LLMBridge app ───────────────────────────────────────────────────────────
   llmbridge:
     build: .
     ports:
@@ -45,10 +48,117 @@ services:
     environment:
       - BIFROST_URL=http://bifrost:8080/v1/chat/completions
       - MODEL=${MODEL:-}
+      - LAGO_URL=http://lago-api:3000
+      - LAGO_API_KEY=${LAGO_API_KEY:-llmbridge-lago-dev-key}
     depends_on:
-      - bifrost
+      bifrost:
+        condition: service_started
+      lago-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Lago billing (postgres + redis + api + worker + clock + front) ──────────
+  lago-db:
+    image: getlago/postgres-partman:latest
+    environment:
+      POSTGRES_DB: lago
+      POSTGRES_USER: lago
+      POSTGRES_PASSWORD: lago
+    volumes:
+      - lago_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lago"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  lago-redis:
+    image: redis:7-alpine
+    volumes:
+      - lago_redis:/data
+    restart: unless-stopped
+
+  lago-migrate:
+    image: getlago/api:v1.46.0
+    command: ["./scripts/migrate.sh"]
+    environment: &lago-env
+      DATABASE_URL: postgresql://lago:lago@lago-db:5432/lago
+      REDIS_URL: redis://lago-redis:6379
+      LAGO_API_URL: http://localhost:3000
+      LAGO_FRONT_URL: http://localhost:8081
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE: "48bab14e4a1d13748b38025ff8306a2f8dd0a2d78cd813dca8f3fe2ed97f24ef7dd3e0da127c142f2bb9ab00b1d35dcb56764d9f3238edc10a4b7da8f9eff8ce"
+      LAGO_RSA_PRIVATE_KEY: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktZd2dnU2lBZ0VBQW9JQkFRQ2J2aEZLdlJNcS9lWWwKRWk3ZHp4a0I2U3JUb2tQWXJSb3UzRHZRWVFCSHQ2VS9UZzZERVVmSzh2TmQzdDBKTUFmNTllUS94YzFNcEZ0aAovL0ZFeWJZclp2RHdsbGNkRXZFQWdBanc4dlFFZ3l0dFlKUVowblZDaUhFMFkzMUI0c3RocEtjS3JzWU1UeUorCitWalg2NnJudzV1WnZBQ2xvOFJIN0llUkUyL3h6R21DSC9yQzZ3QWtIc0l0VlJPUW5pN3NPckZGT21KczlqSDUKbWFBd3hnWUYrUWVVQVMwOUpLVTZ3SWpTSXhVbFBEdlBDOVRUUmExWVFDd2RHK0JLZ1lKYk9rTEFseFlkQTBwcQpQVlpodGkwN3JpZlBTR3NIWHQ2Sk1RRjhOak1SbXRaMVV0TUNmL094Rms5MWU5TUNSM2JiLzJxQytadWVVaXR6CmZsdTdOQjB0QWdNQkFBRUNnZ0VBRTNTai9sMHVWdEdPL1pTTzdFQ2gxQjVIcmxaMytVcHVtZW9EUXQzTFJpcEgKNTJlZDRudTNKMEJBYkxxWmpEdEcwOUFHNm55UVVBRzhOTHJmYmdOdzBXMHpyaXBweVlVRFBGZkNSaTlqa21pOApkUlo2aWR0RHNNTVF1VVd3Y1JtZTVKeklEVXFXRFJXWnJwa0JveithZ3dkcG1jUGxwTXVYaXBDZXd0M1Z2elBqCkQxOVhkdzNGMkw1SkppSkl1Y0ZFd2VGVjFNUlNGWUtCL2N6NDRCUVFQZW9KQmtVNXUycElCNVg0SzlxTTFhZHcKYWRyVUZENWgwWkI4WWR5MkdlZjFKdjVLcUFlVzZDNEtkMWZHWlRGM2UvcUdIUG5WMkhaMkNuWWZDOXZ3Y3U3cAo1TFBrSTBZc1lDOG5PRUI2bEM5b3B0RjVYMlpPU1hBMnBGU2pwa1dsOVFLQmdRRFFXWmJRV050U2JEUHNQTTdhCko0bm14UEF6TVVwWXZGd3V6dlR4ejlPTjlYSGZ1Y2h2NTQzRjRCMVEyTjRzOWp2OHdmMHI2T1JDOHZQbndBcWkKbE5lOFJ6b1dnNEVHaDA5Qi9RSVY2WnpsQ2QzaE9mOFRERUl2aTZCa0IxVnhMcmFIUXd6RjI0SzFjZUZVSXlzdwpRMVc0di9DdjZPWC90L1FQSFdLaTZrV3lZd0tCZ1FDL1hHNFBlckJmbjVYNWlycmF3Zm8zKzVMcnREL2ZXMWYwCjFlKzhzc2UrMDhOeHcxTXBjVnNhZE85VnoxaVZ3SHpKK0dsL28xcWcxanQ2S3JDZTUra25nNTRQdGc3Ky9QU1YKV0M0SWY1dVBJVldpcjYzaEhpZTByeE1OeHBXanJ6RlVuakNqRlJmMU9PL0ZScUU0c1Erc0Yyei96ZVpIVXpNYworZHNPM3hZL0x3S0JnSHdjRWVGMFBObUJTUUM5VEQ3WmRLVDV4VmZKVWM5QURPMTVMS0hxdWN1RFhOejNielZ4Cnlwc0hvSTdyVUpXWjdDdnBacVZFYXN5U3FzWHZPS2FXWVZodldXUFYzQU1Ha1NqdXpOSSt3YzRSclpFZm1oay8Kb1NGdlhCQ1o2Y1N0SGQrL0NobkdZN3N2NWhqWGhqK09yTDZMMzVUNStCLzI5VFFYdmd6cjNxNmZBb0dBT0hCSgpZYlZjeVljbTA0ZVFIcTd4WG91TFJJdFAvMDlRZkx5UVRZWXBGV1lka2JMN0Z4RUF2cWZZWXVXWmllbFFwTHpvCldLWFVOL1dYYXl1bUZlZnVReUkxZndyQ0Y0Q0JubjU0YlRjOXFSUTZ6cFdqNGU1ajVZMXhRREhldG4wWVBvMjkKYUl2ekdmY2wrSGdoV3JnV0dEcDhnbUcyMWpoNnJjUWZVSjZKVUM4Q2dZQXBCaEpiWFltem43bVRrVnNyQXZLQgp4ZVpFcU9jWnJDdnh5UXRsMW9NVHI1ZE9HU3lZQkN4QUhPaUw2Q0U3Z1FwdEhXT1g3Vlc2SHlKWUM2ZmtEeEZ4CkZrQ2d5OS95ZVdtQkdFcVlmMXQwNWJrd1R3NjZjTmU0eDQ3K1QvbFVNMmdPU0hWZG1UeHFPdTVmamdENE9hdVgKd3ZteEZLTWFuR2Z2TXdubjY0cFhRdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K"
+      LAGO_ENCRYPTION_PRIMARY_KEY: "ada4a3bfeb0b2bc394dfdc4c26a136ac"
+      LAGO_ENCRYPTION_DETERMINISTIC_KEY: "dc76be805d87db6b99afd8df797dab2c"
+      LAGO_ENCRYPTION_KEY_DERIVATION_SALT: "72d58e241d7fe418e95b0cfdbcfb2875"
+      LAGO_DISABLE_SEGMENT: "true"
+      LAGO_DISABLE_PDF_GENERATION: "true"
+      LAGO_CREATE_ORG: "true"
+      LAGO_ORG_NAME: "LLMBridge"
+      LAGO_ORG_USER_EMAIL: "admin@llmbridge.local"
+      LAGO_ORG_USER_PASSWORD: "password"
+      LAGO_ORG_API_KEY: "llmbridge-lago-dev-key"
+    depends_on:
+      lago-db:
+        condition: service_healthy
+    restart: "no"
+
+  lago-api:
+    image: getlago/api:v1.46.0
+    command: ["./scripts/start.api.sh"]
+    ports:
+      - "3000:3000"
+    environment: *lago-env
+    depends_on:
+      lago-db:
+        condition: service_healthy
+      lago-migrate:
+        condition: service_completed_successfully
+      lago-redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  lago-worker:
+    image: getlago/api:v1.46.0
+    command: ["./scripts/start.worker.sh"]
+    environment: *lago-env
+    depends_on:
+      lago-api:
+        condition: service_started
+    restart: unless-stopped
+
+  lago-clock:
+    image: getlago/api:v1.46.0
+    command: ["./scripts/start.clock.sh"]
+    environment: *lago-env
+    depends_on:
+      lago-api:
+        condition: service_started
+    restart: unless-stopped
+
+  lago-front:
+    image: getlago/front:v1.46.0
+    ports:
+      - "8081:8080"
+    environment:
+      API_URL: http://localhost:3000
+      APP_ENV: production
+      LAGO_DISABLE_PDF_GENERATION: "true"
+    depends_on:
+      - lago-api
     restart: unless-stopped
 
 volumes:
   ollama_data:
   bifrost_data:
+  lago_db:
+  lago_redis:

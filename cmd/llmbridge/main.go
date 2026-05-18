@@ -7,6 +7,7 @@ import (
 
 	"llmbridge/config"
 	"llmbridge/handler"
+	"llmbridge/lago"
 	"llmbridge/wallet"
 )
 
@@ -23,8 +24,17 @@ func main() {
 		log.Fatalf("cannot read templates/index.html: %v", err)
 	}
 
+	lagoClient := lago.New(cfg.LagoURL, cfg.LagoAPIKey)
+	if lagoClient.Enabled() {
+		if err := lagoClient.EnsureMetric(); err != nil {
+			log.Printf("[Lago] setup warning: %v", err)
+		}
+	} else {
+		log.Printf("[Lago] no API key set — billing disabled")
+	}
+
 	w := wallet.New(initialBalanceBDT)
-	h := handler.New(cfg, w, initialBalanceBDT, indexHTML)
+	h := handler.New(cfg, w, lagoClient, initialBalanceBDT, indexHTML)
 
 	http.HandleFunc("/", h.Index)
 	http.HandleFunc("/chat", h.Chat)

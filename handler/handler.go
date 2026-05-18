@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"llmbridge/config"
+	"llmbridge/lago"
 	"llmbridge/wallet"
 )
 
@@ -22,12 +23,13 @@ const (
 type Handler struct {
 	cfg       *config.Config
 	wallet    *wallet.Wallet
+	lago      *lago.Client
 	initial   float64
 	indexHTML []byte
 }
 
-func New(cfg *config.Config, w *wallet.Wallet, initial float64, indexHTML []byte) *Handler {
-	return &Handler{cfg: cfg, wallet: w, initial: initial, indexHTML: indexHTML}
+func New(cfg *config.Config, w *wallet.Wallet, l *lago.Client, initial float64, indexHTML []byte) *Handler {
+	return &Handler{cfg: cfg, wallet: w, lago: l, initial: initial, indexHTML: indexHTML}
 }
 
 type chatRequest struct {
@@ -142,6 +144,9 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	})
 
 	log.Printf("[Step 6] Lago debited %.6f BDT  balance=%.4f BDT", cost, balance)
+
+	transactionID := fmt.Sprintf("%d", time.Now().UnixNano())
+	h.lago.SendEvent("demo-user", transactionID, model, inputTokens, outputTokens)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(chatResponse{

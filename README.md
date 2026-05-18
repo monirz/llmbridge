@@ -4,7 +4,9 @@ LLMBridge is a concept of a single platform where users can access and switch be
 
 It is built on top of [Bifrost](https://github.com/maximhq/bifrost), an open-source high-performance AI gateway that handles provider routing, failover, and load balancing out of the box. Bifrost turns what would normally require separate integrations for each provider into a single, ready-made solution.
 
-The next planned step for this platform is billing metering via [Lago](https://github.com/getlago/lago) — tracking token usage per user and enabling payment through local payment methods, removing the dependency on international cards.
+Token usage is metered via [Lago](https://github.com/getlago/lago) — every request is tracked and stored as a usage event, laying the foundation for per-user billing with local payment methods and removing the dependency on international cards.
+
+> **POC note:** events are sent to Lago under a hardcoded `demo-user` customer who does not exist as a registered customer in Lago. Events are stored and the metering layer is working, but they won't be aggregated into invoices until a customer and subscription are set up. For a full application this would be replaced by a real user service with authentication, where each user maps to a Lago customer and is subscribed to a billing plan.
 
 ---
 
@@ -29,8 +31,12 @@ Once everything is up:
 
 - **http://localhost:9000** — LLMBridge chat UI
 - **http://localhost:8080** — Bifrost gateway dashboard
+- **http://localhost:8081** — Lago billing dashboard
+- **http://localhost:3000** — Lago API
 
-By default it runs with the self-hosted `qwen2.5:3b` model via Ollama — no API key needed. Bifrost, Ollama, and LLMBridge are all managed under the same `docker compose`.
+By default it runs with the self-hosted `qwen2.5:3b` model via Ollama — no API key needed. Bifrost, Ollama, Lago, and LLMBridge are all managed under the same `docker compose`.
+
+> Lago auto-creates an org on first boot. The API key is pre-set to `llmbridge-lago-dev-key` — no manual step needed.
 
 ---
 

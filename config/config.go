@@ -19,6 +19,8 @@ type Config struct {
 	BifrostURL   string     `mapstructure:"bifrost_url"`
 	DefaultModel string     `mapstructure:"default_model"`
 	Providers    []Provider `mapstructure:"providers"`
+	LagoURL      string     `mapstructure:"lago_url"`
+	LagoAPIKey   string     `mapstructure:"lago_api_key"`
 }
 
 func Load() *Config {
@@ -29,9 +31,12 @@ func Load() *Config {
 
 	viper.BindEnv("bifrost_url", "BIFROST_URL")
 	viper.BindEnv("default_model", "MODEL")
+	viper.BindEnv("lago_url", "LAGO_URL")
+	viper.BindEnv("lago_api_key", "LAGO_API_KEY")
 
 	viper.SetDefault("bifrost_url", "http://localhost:8080/v1/chat/completions")
 	viper.SetDefault("default_model", "ollama/qwen2.5:3b")
+	viper.SetDefault("lago_url", "http://localhost:3000")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("no provider_config.yaml found, using defaults and env vars")
