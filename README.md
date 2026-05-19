@@ -6,7 +6,7 @@ LLMBridge is a concept of a single platform where users can access and switch be
 
 It is built on top of [Bifrost](https://github.com/maximhq/bifrost), an open-source high-performance AI gateway that handles provider routing, failover, and load balancing out of the box. Bifrost turns what would normally require separate integrations for each provider into a single, ready-made solution.
 
-The next planned step for this platform is billing metering via [Lago](https://github.com/getlago/lago) — tracking token usage per user and enabling payment through local payment methods, removing the dependency on international cards.
+The meter billing infrastructure using [Lago](https://github.com/getlago/lago) is in the [`lago` branch](https://github.com/monirz/llmbridge/tree/lago) — tracking token usage per user and enabling payment through local payment methods, removing the dependency on international cards.
 
 ---
 
